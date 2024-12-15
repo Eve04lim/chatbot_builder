@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}API ドキュメント{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- サイドナビゲーション -->
+        <div class="col-md-3">
+            <div class="sticky-top" style="top: 20px;">
+                <div class="card">
+                    <div class="list-group list-group-flush">
+                        <a href="#introduction" class="list-group-item list-group-item-action">はじめに</a>
+                        <a href="#authentication" class="list-group-item list-group-item-action">認証</a>
+                        <a href="#endpoints" class="list-group-item list-group-item-action">エンドポイント</a>
+                        <a href="#chat" class="list-group-item list-group-item-action">チャットAPI</a>
+                        <a href="#examples" class="list-group-item list-group-item-action">サンプルコード</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-body">
+                    <!-- はじめに -->
+                    <section id="introduction" class="mb-5">
+                        <h2>はじめに</h2>
+                        <p>このAPIを使用すると、チャットボットを任意のアプリケーションに統合できます。
+                           すべてのリクエストはHTTPS経由で行われ、JSONフォーマットでレスポンスが返されます。</p>
+                        
+                        <div class="alert alert-info mb-3">
+                            <h5>ベースURL</h5>
+                            <code>https://{{ request.host }}/api/v1</code>
+                        </div>
+                    
+                        <div class="alert alert-success">
+                            <h5>APIのテスト</h5>
+                            <p>APIの動作を確認するには、<a href="{{ url_for('docs.api_test') }}" class="alert-link">APIテストコンソール</a>を使用してください。</p>
+                        </div>
+                    </section>
+
+                    <!-- 認証 -->
+                    <section id="authentication" class="mb-5">
+                        <h2>認証</h2>
+                        <p>すべてのAPIリクエストには認証が必要です。APIキーをヘッダーに含めてリクエストを送信してください。</p>
+                        
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <pre><code>Authorization: Bearer YOUR-API-KEY</code></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- エンドポイント -->
+                    <section id="endpoints" class="mb-5">
+                        <h2>エンドポイント一覧</h2>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>メソッド</th>
+                                    <th>エンドポイント</th>
+                                    <th>説明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="badge bg-success">GET</span></td>
+                                    <td><code>/chatbots</code></td>
+                                    <td>利用可能なチャットボット一覧を取得</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-primary">POST</span></td>
+                                    <td><code>/chat/:id/send</code></td>
+                                    <td>チャットボットにメッセージを送信</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-success">GET</span></td>
+                                    <td><code>/chat/:id/history</code></td>
+                                    <td>会話履歴を取得</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <!-- チャットAPI -->
+                    <section id="chat" class="mb-5">
+                        <h2>チャットAPI</h2>
+                        
+                        <h4>メッセージの送信</h4>
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <pre><code>POST /api/v1/chat/:id/send
+
+{
+    "message": "こんにちは",
+    "language": "ja"
+}</code></pre>
+                            </div>
+                        </div>
+
+                        <h4>レスポンス例</h4>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <pre><code>{
+    "response": "こんにちは！何かお手伝いできることはありますか？",
+    "conversation_id": "12345"
+}</code></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- サンプルコード -->
+                    <section id="examples" class="mb-5">
+                        <h2>サンプルコード</h2>
+                        
+                        <h4>Python</h4>
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <pre><code>import requests
+
+API_KEY = "your-api-key"
+CHATBOT_ID = "your-chatbot-id"
+BASE_URL = "https://{{ request.host }}/api/v1"
+
+def send_message(message):
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    data = {
+        "message": message,
+        "language": "ja"
+    }
+    
+    response = requests.post(
+        f"{BASE_URL}/chat/{CHATBOT_ID}/send",
+        headers=headers,
+        json=data
+    )
+    
+    return response.json()</code></pre>
+                            </div>
+                        </div>
+
+                        <h4>JavaScript</h4>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <pre><code>const API_KEY = 'your-api-key';
+const CHATBOT_ID = 'your-chatbot-id';
+const BASE_URL = 'https://{{ request.host }}/api/v1';
+
+async function sendMessage(message) {
+    const response = await fetch(
+        `${BASE_URL}/chat/${CHATBOT_ID}/send`,
+        {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: message,
+                language: 'ja'
+            })
+        }
+    );
+    
+    return await response.json();
+}</code></pre>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 0;
+}
+
+code {
+    color: #d63384;
+}
+
+.sticky-top {
+    position: sticky;
+    top: 20px;
+}
+
+.badge {
+    font-size: 0.8em;
+    padding: 0.35em 0.65em;
+}
+</style>
+{% endblock %}

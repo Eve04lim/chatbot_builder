@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}チャットボット作成{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">チャットボットの新規作成</h2>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">チャットボット名 *</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">説明</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="language" class="form-label">言語</label>
+                            <select class="form-select" id="language" name="language">
+                                <option value="ja">日本語</option>
+                                <option value="en">英語</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="system_prompt" class="form-label">システムプロンプト</label>
+                            <textarea class="form-control" id="system_prompt" name="system_prompt" rows="3"
+                                placeholder="チャットボットの性格や役割を設定してください"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="temperature" class="form-label">
+                                Temperature (0.0 - 1.0)
+                                <small class="text-muted">高いほど創造的な応答になります</small>
+                            </label>
+                            <input type="range" class="form-range" id="temperature" name="temperature" 
+                                min="0" max="1" step="0.1" value="0.7">
+                            <span id="temperature-value">0.7</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="max_tokens" class="form-label">
+                                最大トークン数
+                                <small class="text-muted">応答の最大長を設定します</small>
+                            </label>
+                            <input type="number" class="form-control" id="max_tokens" name="max_tokens" 
+                                value="150" min="50" max="500">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">作成</button>
+                            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">キャンセル</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('temperature').addEventListener('input', function(e) {
+        document.getElementById('temperature-value').textContent = e.target.value;
+    });
+</script>
+{% endblock %}

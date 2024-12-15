@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}APIテストコンソール{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- エンドポイント選択とパラメータ入力 -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">APIリクエスト</h5>
+                </div>
+                <div class="card-body">
+                    <form id="apiTestForm">
+                        <!-- メソッドとエンドポイントの選択 -->
+                        <div class="mb-3">
+                            <label class="form-label">エンドポイント</label>
+                            <div class="input-group">
+                                <select class="form-select w-25" id="httpMethod">
+                                    <option value="GET">GET</option>
+                                    <option value="POST">POST</option>
+                                    <option value="PUT">PUT</option>
+                                    <option value="DELETE">DELETE</option>
+                                </select>
+                                <select class="form-select" id="endpoint">
+                                    <option value="/api/v1/chatbots">GET /chatbots</option>
+                                    <option value="/api/v1/chat/{id}/send">POST /chat/{id}/send</option>
+                                    <option value="/api/v1/chat/{id}/history">GET /chat/{id}/history</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- APIキー入力 -->
+                        <div class="mb-3">
+                            <label for="apiKey" class="form-label">APIキー</label>
+                            <input type="text" class="form-control" id="apiKey" 
+                                   placeholder="Bearer トークンを入力">
+                        </div>
+
+                        <!-- パラメータ入力 -->
+                        <div id="pathParams" class="mb-3 d-none">
+                            <label class="form-label">パスパラメータ</label>
+                            <input type="number" class="form-control" id="chatbotId" 
+                                   placeholder="チャットボットID">
+                        </div>
+
+                        <!-- リクエストボディ -->
+                        <div id="requestBody" class="mb-3 d-none">
+                            <label class="form-label">リクエストボディ (JSON)</label>
+                            <textarea class="form-control font-monospace" id="requestBodyInput" 
+                                    rows="5" placeholder='{
+    "message": "こんにちは",
+    "language": "ja"
+}'></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            リクエストを送信
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- レスポンス表示 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">レスポンス</h5>
+                    <button class="btn btn-sm btn-outline-secondary" id="clearResponse">
+                        クリア
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="responseStatus" class="mb-3"></div>
+                    <pre id="responseBody" class="bg-light p-3 rounded">
+レスポンスがここに表示されます...
+                    </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('apiTestForm');
+    const endpoint = document.getElementById('endpoint');
+    const pathParams = document.getElementById('pathParams');
+    const requestBody = document.getElementById('requestBody');
+    const responseStatus = document.getElementById('responseStatus');
+    const responseBody = document.getElementById('responseBody');
+    const clearButton = document.getElementById('clearResponse');
+
+    // エンドポイント選択時の表示制御
+    endpoint.addEventListener('change', () => {
+        if (endpoint.value.includes('{id}')) {
+            pathParams.classList.remove('d-none');
+        } else {
+            pathParams.classList.add('d-none');
+        }
+
+        if (endpoint.value.includes('/send')) {
+            requestBody.classList.remove('d-none');
+        } else {
+            requestBody.classList.add('d-none');
+        }
+    });
+
+    // リクエスト送信
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        try {
+            // URLの作成
+            let url = endpoint.value;
+            if (url.includes('{id}')) {
+                const chatbotId = document.getElementById('chatbotId').value;
+                url = url.replace('{id}', chatbotId);
+            }
+
+            // リクエストオプションの設定
+            const options = {
+                method: document.getElementById('httpMethod').value,
+                headers: {
+                    'Authorization': document.getElementById('apiKey').value,
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            // リクエストボディの追加（必要な場合）
+            if (!requestBody.classList.contains('d-none')) {
+                options.body = document.getElementById('requestBodyInput').value;
+            }
+
+            // リクエストの送信
+            const response = await fetch(url, options);
+            const data = await response.json();
+
+            // レスポンスの表示
+            responseStatus.innerHTML = `
+                <div class="alert alert-${response.ok ? 'success' : 'danger'}">
+                    Status: ${response.status} ${response.statusText}
+                </div>
+            `;
+            responseBody.textContent = JSON.stringify(data, null, 2);
+
+        } catch (error) {
+            responseStatus.innerHTML = `
+                <div class="alert alert-danger">
+                    Error: ${error.message}
+                </div>
+            `;
+            responseBody.textContent = 'エラーが発生しました';
+        }
+    });
+
+    // レスポンスのクリア
+    clearButton.addEventListener('click', () => {
+        responseStatus.innerHTML = '';
+        responseBody.textContent = 'レスポンスがここに表示されます...';
+    });
+});
+</script>
+{% endblock %}

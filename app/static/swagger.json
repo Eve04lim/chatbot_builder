@@ -1,0 +1,134 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "チャットボットビルダー API",
+        "description": "チャットボットの作成と管理のためのAPI",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:5000/api/v1",
+            "description": "開発サーバー"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        },
+        "schemas": {
+            "Chatbot": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "language": {
+                        "type": "string"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ChatResponse": {
+                "type": "object",
+                "properties": {
+                    "response": {
+                        "type": "string"
+                    },
+                    "conversation_id": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "security": [
+        {
+            "BearerAuth": []
+        }
+    ],
+    "paths": {
+        "/chatbots": {
+            "get": {
+                "summary": "チャットボット一覧の取得",
+                "description": "利用可能なチャットボットの一覧を取得します",
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Chatbot"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/{chatbot_id}/send": {
+            "post": {
+                "summary": "メッセージの送信",
+                "description": "チャットボットにメッセージを送信し、応答を取得します",
+                "parameters": [
+                    {
+                        "name": "chatbot_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "チャットボットのID"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "message": {
+                                        "type": "string",
+                                        "description": "送信するメッセージ"
+                                    },
+                                    "language": {
+                                        "type": "string",
+                                        "enum": ["ja", "en"],
+                                        "description": "メッセージの言語"
+                                    }
+                                },
+                                "required": ["message"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

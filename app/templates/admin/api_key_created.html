@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}APIキー生成完了{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">APIキーが生成されました</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        このキーは<strong>一度だけ</strong>表示されます。必ずコピーして安全な場所に保存してください。
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">APIキー</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control font-monospace" 
+                                   id="apiKey" value="{{ api_key.key }}" readonly>
+                            <button class="btn btn-outline-primary" onclick="copyApiKey()">
+                                <i class="bi bi-clipboard"></i> コピー
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <a href="{{ url_for('admin.api_keys') }}" class="btn btn-primary">
+                            APIキー管理に戻る
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyApiKey() {
+    const apiKey = document.getElementById('apiKey');
+    apiKey.select();
+    document.execCommand('copy');
+    alert('APIキーをクリップボードにコピーしました。');
+}
+</script>
+{% endblock %}

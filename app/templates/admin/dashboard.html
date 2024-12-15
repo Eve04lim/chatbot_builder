@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}ダッシュボード{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- ダッシュボードヘッダー -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-speedometer2"></i> ダッシュボード
+                </h1>
+                <a href="{{ url_for('admin.create_chatbot') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> 新規チャットボット作成
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 統計情報カード -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">総チャットボット数</h6>
+                            <h2 class="card-title mb-0">{{ chatbots|length }}</h2>
+                        </div>
+                        <i class="bi bi-robot text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">アクティブなボット</h6>
+                            <h2 class="card-title mb-0">{{ chatbots|selectattr('is_active')|list|length }}</h2>
+                        </div>
+                        <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2 text-muted">今月の総会話数</h6>
+                            <h2 class="card-title mb-0">{{ total_conversations }}</h2>
+                        </div>
+                        <i class="bi bi-chat-dots text-info" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- チャットボット一覧 -->
+    <div class="row">
+        {% for chatbot in chatbots %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            {{ chatbot.name }}
+                            {% if chatbot.is_active %}
+                            <span class="badge bg-success">有効</span>
+                            {% else %}
+                            <span class="badge bg-secondary">無効</span>
+                            {% endif %}
+                        </h5>
+                        <div class="dropdown">
+                            <button class="btn btn-link text-dark" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('chat.chat_window', chatbot_id=chatbot.id) }}">
+                                        <i class="bi bi-chat"></i> チャット
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('admin.edit_chatbot', id=chatbot.id) }}">
+                                        <i class="bi bi-pencil"></i> 編集
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{{ url_for('admin.delete_chatbot', id=chatbot.id) }}" method="post"
+                                          onsubmit="return confirm('本当に削除しますか？');">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-trash"></i> 削除
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted mb-3">{{ chatbot.description or '説明なし' }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="bi bi-calendar"></i> 
+                            作成日: {{ chatbot.created_at.strftime('%Y-%m-%d') }}
+                        </small>
+                        <small class="text-muted">
+                            <i class="bi bi-globe"></i>
+                            言語: {{ chatbot.language }}
+                        </small>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="row text-center">
+                        <div class="col">
+                            <button class="btn btn-primary btn-sm w-100" 
+                                    onclick="window.location.href='{{ url_for('chat.chat_window', chatbot_id=chatbot.id) }}'">
+                                <i class="bi bi-chat"></i> チャット
+                            </button>
+                        </div>
+                        <div class="col">
+                            <button class="btn btn-outline-secondary btn-sm w-100" 
+                                    onclick="window.location.href='{{ url_for('admin.edit_chatbot', id=chatbot.id) }}'">
+                                <i class="bi bi-gear"></i> 設定
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-robot text-muted" style="font-size: 3rem;"></i>
+                    <h3 class="mt-3">チャットボットがまだありません</h3>
+                    <p class="text-muted">新しいチャットボットを作成して始めましょう</p>
+                    <a href="{{ url_for('admin.create_chatbot') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i> チャットボットを作成
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.card-header .dropdown-toggle::after {
+    display: none;
+}
+
+.badge {
+    font-size: 0.75em;
+    padding: 0.35em 0.65em;
+}
+
+.stats-card {
+    border: none;
+    border-radius: 10px;
+}
+
+.stats-card i {
+    opacity: 0.8;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}{{ chatbot.name }}との会話{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <!-- チャットヘッダー -->
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">{{ chatbot.name }}</h5>
+                            <small>{{ chatbot.description }}</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <select id="themeSelector" class="form-select form-select-sm">
+                                <option value="light">ライトモード</option>
+                                <option value="dark">ダークモード</option>
+                            </select>
+                            <button class="btn btn-sm btn-light" id="clearChat">
+                                履歴クリア
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- チャット本文 -->
+                <div class="card-body p-0">
+                    <div id="chat-messages" class="chat-container">
+                        <!-- 過去の会話履歴 -->
+                        {% for conv in history %}
+                        <div class="chat-message user">
+                            <div class="message-content">
+                                <div class="message-bubble">{{ conv.user_input }}</div>
+                            </div>
+                        </div>
+                        <div class="chat-message bot">
+                            <div class="message-content">
+                                <div class="message-bubble">{{ conv.bot_response }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- 入力フォーム -->
+                    <div class="chat-input-container border-top p-3">
+                        <form id="chat-form" class="mb-0">
+                            <div class="input-group">
+                                <input type="text" id="message-input" class="form-control" 
+                                    placeholder="メッセージを入力..." required>
+                                <button type="button" id="voiceInput" class="voice-button">
+                                    <i class="bi bi-mic"></i>
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    送信
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+<style>
+.chat-container {
+    height: 60vh;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.chat-message {
+    display: flex;
+    margin-bottom: 1rem;
+}
+
+.chat-message.user {
+    justify-content: flex-end;
+}
+
+.message-content {
+    max-width: 80%;
+}
+
+.message-bubble {
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.bot .message-bubble {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-top-left-radius: 0.2rem;
+}
+
+.user .message-bubble {
+    background-color: #007bff;
+    color: white;
+    border-top-right-radius: 0.2rem;
+}
+
+.voice-button {
+    padding: 0.375rem 0.75rem;
+    background-color: #6c757d;
+    border: none;
+    color: white;
+    border-radius: 0.25rem;
+    margin: 0 0.5rem;
+}
+
+.voice-button.listening {
+    background-color: #dc3545;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.dark-theme {
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+
+.dark-theme .card {
+    background-color: #2d2d2d;
+    border-color: #404040;
+}
+
+.dark-theme .chat-container {
+    background-color: #1a1a1a;
+}
+
+.dark-theme .bot .message-bubble {
+    background-color: #404040;
+    border-color: #505050;
+    color: #ffffff;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const chatMessages = document.getElementById('chat-messages');
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const clearButton = document.getElementById('clearChat');
+    const voiceButton = document.getElementById('voiceInput');
+    const themeSelector = document.getElementById('themeSelector');
+    const chatbotId = {{ chatbot.id }};
+
+    // チャットフォームの送信処理
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        // メッセージを表示
+        appendMessage(message, true);
+        messageInput.value = '';
+
+        try {
+            const response = await fetch(`/chat/${chatbotId}/send`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                appendMessage(data.response, false);
+            } else {
+                appendMessage('エラーが発生しました: ' + data.error, false);
+            }
+        } catch (error) {
+            appendMessage('通信エラーが発生しました。', false);
+            console.error('Error:', error);
+        }
+    });
+
+    // メッセージの表示
+    function appendMessage(content, isUser) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${isUser ? 'user' : 'bot'}`;
+        messageDiv.innerHTML = `
+            <div class="message-content">
+                <div class="message-bubble">${content}</div>
+            </div>
+        `;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // テーマの切り替え
+    themeSelector.addEventListener('change', (e) => {
+        document.body.className = e.target.value === 'dark' ? 'dark-theme' : '';
+    });
+
+    // 履歴のクリア
+    clearButton.addEventListener('click', () => {
+        if (confirm('チャット履歴をクリアしますか？')) {
+            chatMessages.innerHTML = '';
+        }
+    });
+
+    // Enterキーでの送信
+    messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatForm.dispatchEvent(new Event('submit'));
+        }
+    });
+});
+</script>
+{% endblock %}
